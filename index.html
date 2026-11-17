@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAMIM ADVENTURE</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#10182d;color:white;text-align:center;font-family:Arial}
+h1{color:#ffd43b;margin:18px 0 8px}
+#score{font-size:20px;margin:12px}
+canvas{background:linear-gradient(#58b8ef,#d9f3ff);width:95%;max-width:600px;border:4px solid white;border-radius:12px;touch-action:none}
+.controls{display:flex;justify-content:center;gap:15px;margin:18px}
+button{font-size:25px;padding:14px 24px;border:0;border-radius:14px;background:#ffbd35;font-weight:bold;touch-action:none}
+#restart{font-size:17px;background:#36d399}
+</style>
+</head>
+<body>
+<h1>🎮 TAMIM ADVENTURE</h1>
+<div id="score">Score: 0</div>
+<canvas id="game" width="600" height="350"></canvas>
+<div class="controls">
+<button id="left">⬅️</button>
+<button id="jump">⬆️</button>
+<button id="right">➡️</button>
+</div>
+<button id="restart">RESTART</button>
+<script>
+const c=document.getElementById("game");
+const ctx=c.getContext("2d");
+let player={x:60,y:250,vx:0,vy:0};
+let score=0,coins=[],over=false;
+let keys={left:false,right:false};
+function newCoins(){
+ coins=[];
+ for(let i=0;i<7;i++)
+ coins.push({x:150+i*65,y:235-Math.random()*90,taken:false});
+}
+newCoins();
+function hold(id,key){
+ let b=document.getElementById(id);
+ b.addEventListener("pointerdown",e=>{e.preventDefault();keys[key]=true});
+ b.addEventListener("pointerup",()=>keys[key]=false);
+ b.addEventListener("pointerleave",()=>keys[key]=false);
+ b.addEventListener("pointercancel",()=>keys[key]=false);
+}
+hold("left","left");
+hold("right","right");
+document.getElementById("jump").addEventListener("pointerdown",()=>{
+ if(player.y>=249&&!over)player.vy=-13;
+});
+function draw(){
+ ctx.clearRect(0,0,600,350);
+ // ground
+ ctx.fillStyle="#258a45";
+ ctx.fillRect(0,290,600,60);
+ // platforms
+ ctx.fillStyle="#98652e";
+ ctx.fillRect(180,245,100,12);
+ ctx.fillRect(380,215,100,12);
+ // coins
+ coins.forEach(a=>{
+ if(!a.taken){
+ ctx.fillStyle="#ffcc00";
+ ctx.beginPath();ctx.arc(a.x,a.y,10,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#fff2a0";
+ ctx.fillRect(a.x-2,a.y-6,4,12);
+ }
+ });
+ // player
+ ctx.fillStyle="#e83e65";
+ ctx.fillRect(player.x,player.y,30,40);
+ ctx.fillStyle="white";
+ ctx.fillRect(player.x+18,player.y+8,6,6);
+ ctx.fillStyle="#222";
+ ctx.fillRect(player.x+20,player.y+10,3,3);
+}
+function update(){
+ if(over)return;
+ player.vx=0;
+ if(keys.left)player.vx=-4;
+ if(keys.right)player.vx=4;
+ player.x+=player.vx;
+ player.vy+=0.6;
+ player.y+=player.vy;
+ if(player.y>250){player.y=250;player.vy=0}
+ if(player.x<0)player.x=0;
+ if(player.x>570)player.x=570;
+ coins.forEach(a=>{
+ if(!a.taken&&Math.abs(player.x+15-a.x)<23&&Math.abs(player.y+20-a.y)<25){
+ a.taken=true;score+=10;
+ document.getElementById("score").textContent="Score: "+score;
+ }
+ });
+ if(coins.every(a=>a.taken)){
+ newCoins();
+ }
+ draw();
+ requestAnimationFrame(update);
+}
+document.getElementById("restart").onclick=()=>{
+ player={x:60,y:250,vx:0,vy:0};
+ score=0;over=false;newCoins();
+ document.getElementById("score").textContent="Score: 0";
+ update();
+};
+draw();update();
+</script>
+</body>
+</html>
+  
